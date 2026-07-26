@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - SkySwap{% endblock %}
+
+{% block guest_content %}
+<div class="glass-card p-10 rounded-[2.5rem] shadow-2xl border border-white/50">
+    <div class="text-center mb-10">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-primary/10 text-primary rounded-2xl mb-6">
+            <i class="fas fa-paper-plane text-2xl"></i>
+        </div>
+        <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Welcome Back</h2>
+        <p class="text-slate-500 mt-2 font-medium">Ready for your next adventure?</p>
+    </div>
+
+    <form action="{{ url_for('login') }}" method="POST" class="space-y-6">
+        <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Email Address</label>
+            <div class="relative">
+                <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
+                <input type="email" name="email" required
+                       class="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium text-slate-700"
+                       placeholder="you@example.com">
+            </div>
+        </div>
+
+        <div>
+            <div class="flex items-center justify-between mb-2 ml-1">
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest">Password</label>
+                <a href="{{ url_for('forgot_password') }}" class="text-xs font-bold text-primary hover:text-secondary transition-colors">Forgot?</a>
+            </div>
+            <div class="relative">
+                <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
+                <input type="password" name="password" required
+                       class="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium text-slate-700"
+                       placeholder="••••••••">
+            </div>
+        </div>
+
+        <button type="submit"
+                class="w-full py-4 bg-primary hover:bg-secondary text-white font-bold rounded-2xl shadow-lg shadow-primary/30 transition-all transform active:scale-[0.98]">
+            Sign In
+        </button>
+    </form>
+
+    <div class="mt-8 text-center">
+        <p class="text-sm text-slate-500 font-medium">
+            New to SkySwap?
+            <a href="{{ url_for('register') }}" class="text-primary hover:text-secondary font-bold">Create Account</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "skyswap",
+      "runtimeExecutable": "venv/Scripts/python.exe",
+      "runtimeArgs": ["-u", "app.py"],
+      "port": 5000
+    }
+  ]
+}

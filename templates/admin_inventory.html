@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Ticket Inventory - Admin Panel{% endblock %}
+{% block header_title %}Inventory Management{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-8">
+    
+    <!-- Top Header and Sync Action -->
+    <div class="glass-card rounded-3xl p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800">External Ticket Sync</h2>
+            <p class="text-slate-500 text-sm mt-1">Fetch latest flight inventory records and control what displays on the public website.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{{ url_for('inventory.web_index') }}" target="_blank" class="inline-flex items-center px-6 py-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition duration-200">
+                <i class="fas fa-satellite-dish mr-2"></i>
+                <span>Open GDS Simulator</span>
+            </a>
+            <form action="{{ url_for('admin_fetch_inventory') }}" method="POST" id="fetch-form" onsubmit="showSyncLoader()">
+                <button type="submit" id="fetch-btn" class="inline-flex items-center px-6 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition duration-200">
+                    <i class="fas fa-rotate mr-2" id="sync-icon"></i>
+                    <span id="sync-text">Fetch Tickets from Inventory</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sync Loader overlay (Hidden by default) -->
+    <div id="sync-loader" class="hidden rounded-3xl bg-indigo-50 border border-indigo-100 p-6 text-center animate-pulse">
+        <div class="flex items-center justify-center gap-3">
+            <i class="fas fa-spinner animate-spin text-2xl text-indigo-600"></i>
+            <p class="text-indigo-950 font-bold">Synchronizing with GDS Dummy Inventory Simulator...</p>
+        </div>
+    </div>
+
+    <!-- Stats summary grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+        <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Fetched</p>
+            <p class="text-3xl font-black text-slate-800 mt-2">{{ tickets|length }}</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm border-l-4 border-emerald-500">
+            <p class="text-xs font-bold text-emerald-600 uppercase tracking-widest">Published</p>
+            <p class="text-3xl font-black text-slate-800 mt-2">
+                {{ tickets | selectattr('ticket_status', 'equalto', 'Published') | list | length }}
+            </p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm border-l-4 border-blue-500">
+            <p class="text-xs font-bold text-blue-600 uppercase tracking-widest">Sold</p>
+            <p class="text-3xl font-black text-slate-800 mt-2">
+                {{ tickets | selectattr('ticket_status', 'equalto', 'Sold') | list | length }}
+            </p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm border-l-4 border-amber-500">
+            <p class="text-xs font-bold text-amber-600 uppercase tracking-widest">Unpublished</p>
+            <p class="text-3xl font-black text-slate-800 mt-2">
+                {{ tickets | selectattr('ticket_status', 'equalto', 'Unpublished') | list | length }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Filter Control Bar -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+        <form method="GET" action="{{ url_for('admin_inventory') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Search Query</label>
+                <div class="relative">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" name="search" placeholder="ID, Flight, Route, Seller..." value="{{ request.args.get('search', '') }}"
+                           class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm">
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Filter Status</label>
+                <select name="status" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm">
+                    <option value="">All Statuses</option>
+                    <option value="Available" {% if request.args.get('status') == 'Available' %}selected{% endif %}>Available</option>
+                    <option value="Published" {% if request.args.get('status') == 'Published' %}selected{% endif %}>Published</option>
+                    <option value="Unpublished" {% if request.args.get('status') == 'Unpublished' %}selected{% endif %}>Unpublished</option>
+                    <option value="Sold" {% if request.args.get('status') == 'Sold' %}selected{% endif %}>Sold</option>
+                    <option value="Reserved" {% if request.args.get('status') == 'Reserved' %}selected{% endif %}>Reserved</option>
+                    <option value="Expired" {% if request.args.get('status') == 'Expired' %}selected{% endif %}>Expired</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Sort Results</label>
+                <select name="sort" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm">
+                    <option value="">Default (No Sorting)</option>
+                    <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                    <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                    <option value="date_asc" {% if request.args.get('sort') == 'date_asc' %}selected{% endif %}>Departure Date: Ascending</option>
+                    <option value="date_desc" {% if request.args.get('sort') == 'date_desc' %}selected{% endif %}>Departure Date: Descending</option>
+                </select>
+            </div>
+
+            <div class="flex gap-2">
+                <button type="submit" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-md transition-all text-sm">
+                    Apply Filter
+                </button>
+                <a href="{{ url_for('admin_inventory') }}" class="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl transition-all text-sm text-center">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Ticket Records Table -->
+    <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-left">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Ticket ID</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Flight Info</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Route Details</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Seat & Class</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Price (PKR)</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Seller Details</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    {% for ticket in tickets %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-mono font-bold text-slate-800">{{ ticket.ticket_id }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="font-bold text-sm text-slate-900">{{ ticket.flight_number }}</span><br>
+                            <span class="text-xs text-slate-500">{{ ticket.airline_name }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800">
+                            <div>{{ ticket.departure_city }} &rarr; {{ ticket.destination_city }}</div>
+                            <div class="text-xs text-slate-500">{{ ticket.departure_date }} at {{ ticket.departure_time }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800">
+                            <span class="px-2 py-0.5 rounded bg-slate-100 text-xs font-bold font-mono text-slate-600">{{ ticket.seat_number }}</span><br>
+                            <span class="text-xs text-slate-500">{{ ticket.travel_class }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-semibold">
+                            {% if ticket.resale_price > 0 %}
+                            <div>PKR {{ "{:,}".format(ticket.resale_price) }}</div>
+                            <div class="text-xs text-indigo-500">Resale Price</div>
+                            {% else %}
+                            <div>PKR {{ "{:,}".format(ticket.original_price) }}</div>
+                            <div class="text-xs text-slate-400">Original Price</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-500">
+                            {% if ticket.seller_name %}
+                            <span class="font-bold text-slate-700">{{ ticket.seller_name }}</span><br>
+                            <span>{{ ticket.seller_email }}</span><br>
+                            <span>{{ ticket.seller_phone }}</span>
+                            {% else %}
+                            <span class="text-slate-400">No seller registered</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider
+                                {% if ticket.ticket_status == 'Published' %}
+                                    bg-emerald-100 text-emerald-800
+                                {% elif ticket.ticket_status == 'Sold' %}
+                                    bg-blue-100 text-blue-800
+                                {% elif ticket.ticket_status == 'Unpublished' %}
+                                    bg-slate-100 text-slate-800
+                                {% elif ticket.ticket_status == 'Reserved' %}
+                                    bg-amber-100 text-amber-800
+                                {% else %}
+                                    bg-red-100 text-red-800
+                                {% endif %}">
+                                {{ ticket.ticket_status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-xs font-bold space-y-1 flex flex-col items-start">
+                            {% if ticket.ticket_status == 'Unpublished' %}
+                            <a href="{{ url_for('admin_inventory_update_status', ticket_id=ticket.ticket_id, action='publish') }}"
+                               class="inline-flex items-center text-emerald-600 hover:text-emerald-800">
+                                <i class="fas fa-eye mr-1"></i> Publish
+                            </a>
+                            {% elif ticket.ticket_status == 'Published' %}
+                            <a href="{{ url_for('admin_inventory_update_status', ticket_id=ticket.ticket_id, action='unpublish') }}"
+                               class="inline-flex items-center text-slate-600 hover:text-slate-800">
+                                <i class="fas fa-eye-slash mr-1"></i> Unpublish
+                            </a>
+                            {% endif %}
+                            
+                            {% if ticket.ticket_status != 'Sold' %}
+                            <a href="{{ url_for('admin_inventory_update_status', ticket_id=ticket.ticket_id, action='sold') }}"
+                               class="inline-flex items-center text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-check-double mr-1"></i> Mark Sold
+                            </a>
+                            {% endif %}
+                            
+                            {% if ticket.ticket_status != 'Expired' %}
+                            <a href="{{ url_for('admin_inventory_update_status', ticket_id=ticket.ticket_id, action='unavailable') }}"
+                               class="inline-flex items-center text-red-600 hover:text-red-800">
+                                <i class="fas fa-ban mr-1"></i> Expire
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-8 text-center text-slate-500">
+                            No flight ticket records found. Click "Fetch Tickets" above to import from the GDS dummy inventory.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showSyncLoader() {
+        document.getElementById('sync-loader').classList.remove('hidden');
+        document.getElementById('fetch-btn').disabled = true;
+        document.getElementById('fetch-btn').classList.add('opacity-50', 'cursor-not-allowed');
+        document.getElementById('sync-icon').classList.add('animate-spin');
+        document.getElementById('sync-text').innerText = "Syncing...";
+    }
+</script>
+{% endblock %}

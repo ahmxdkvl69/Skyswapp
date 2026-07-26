@@ -1,0 +1,14 @@
+# Secrets — never commit these. Real values go in Vercel's env vars.
+.env
+serviceAccountKey.json
+
+venv/
+__pycache__/
+*.pyc
+
+# The old file-based database, replaced by Neon
+local_database.pkl
+external_inventory_db.json
+
+.vercel/
+scratch/

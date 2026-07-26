@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket Verification Details - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Breadcrumb & Back Link -->
+    <div class="mb-6 flex items-center justify-between">
+        <a href="{{ url_for('admin_tickets') }}" class="inline-flex items-center text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors duration-200">
+            <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Submitted Tickets
+        </a>
+        
+        <a href="{{ url_for('admin_ticket_pdf', request_id=ticket.request_id) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all duration-200">
+            <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Download PDF Ticket
+        </a>
+    </div>
+
+    <!-- Header status card -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Ticket ID</span>
+                <h2 class="text-2xl font-black text-slate-900 font-mono mt-1">{{ ticket.request_id }}</h2>
+            </div>
+            <div>
+                <span class="px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wider
+                    {% if ticket.status == 'Verified / Approved' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                    {% elif ticket.status == 'Rejected' %}bg-rose-50 text-rose-700 border border-rose-200
+                    {% else %}bg-amber-50 text-amber-700 border border-amber-200{% endif %}">
+                    {{ ticket.status }}
+                </span>
+            </div>
+        </div>
+        
+        {% if ticket.status in ['Verified / Approved', 'Rejected'] %}
+        <div class="mt-6 pt-6 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div>
+                <p class="text-xs font-semibold text-slate-400 uppercase">Verified By</p>
+                <p class="font-bold text-slate-700 mt-1">{{ ticket.get('verified_by', 'N/A') }}</p>
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-slate-400 uppercase">Verification Date & Time</p>
+                <p class="font-bold text-slate-700 mt-1">{{ ticket.get('verification_date', 'N/A') }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Flight Details -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4 flex items-center">
+                <i class="fas fa-plane mr-2 text-indigo-600"></i>Flight Details
+            </h3>
+            
+            <div class="space-y-3">
+                <div class="flex justify-between py-1">
+                    <span class="text-slate-500 text-sm">Flight Number:</span>
+                    <span class="font-semibold text-slate-800 text-sm">{{ ticket.flight_number }}</span>
+                </div>
+                <div class="flex justify-between py-1">
+                    <span class="text-slate-500 text-sm">Airline Name:</span>
+                    <span class="font-semibold text-slate-800 text-sm">{{ booking.get('airline', 'N/A') if booking else 'N/A' }}</span>
+                </div>
+                <div class="flex justify-between py-1">
+                    <span class="text-slate-500 text-sm">Departure City:</span>
+                    <span class="font-semibold text-slate-800 text-sm">{{ ticket.origin }}</span>
+                </div>
+                <div class="flex justify-between py-1">
+                    <span class="text-slate-500 text-sm">Destination City:</span>
+                    <span class="font-semibold text-slate-800 text-sm">{{ ticket.destination }}</span>
+                </div>
+                <div class="flex justify-between py-1">
+                    <span class="text-slate-500 text-sm">Departure Date:</span>
+                    <span class="font-semibold text-slate-800 text-sm">{{ booking.get('departure_date', 'N/A') if booking else 'N/A' }}</span>
+                </div>
+                <div class="flex justify-between py-1">
+                    <span class="text-slate-500 text-sm">Departure Time:</span>
+                    <span class="font-semibold text-slate-800 text-sm">{{ booking.get('departure', 'N/A') if booking else 'N/A' }}</span>
+                </div>
+                <div class="flex justify-between py-1">
+                    <span class="text-slate-500 text-sm">Arrival Time:</span>
+                    <span class="font-semibold text-slate-800 text-sm">{{ booking.get('arrival', 'N/A') if booking else 'N/A' }}</span>
+                </div>
+                <div class="flex justify-between py-1">
+                    <span class="text-slate-500 text-sm">Seat Number:</span>
+                    <span class="font-semibold text-slate-800 text-sm">{{ booking.get('seat_number', 'N/A') if booking else 'N/A' }}</span>
+                </div>
+                <div class="flex justify-between py-1">
+                    <span class="text-slate-500 text-sm">Travel Class:</span>
+                    <span class="font-semibold text-slate-800 text-sm">{{ booking.get('travel_class', 'N/A') if booking else 'N/A' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Seller Details -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4 flex items-center">
+                    <i class="fas fa-user-tie mr-2 text-indigo-600"></i>Seller Details
+                </h3>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between py-1">
+                        <span class="text-slate-500 text-sm">Seller Name:</span>
+                        <span class="font-semibold text-slate-800 text-sm">{{ seller.get('name', 'N/A') if seller else 'N/A' }}</span>
+                    </div>
+                    <div class="flex justify-between py-1">
+                        <span class="text-slate-500 text-sm">User ID:</span>
+                        <span class="font-mono font-semibold text-slate-800 text-xs truncate max-w-[180px]">{{ ticket.seller_uid }}</span>
+                    </div>
+                    <div class="flex justify-between py-1">
+                        <span class="text-slate-500 text-sm">Contact Number:</span>
+                        <span class="font-semibold text-slate-800 text-sm">{{ seller.get('phone', 'N/A') if seller else 'N/A' }}</span>
+                    </div>
+                    <div class="flex justify-between py-1">
+                        <span class="text-slate-500 text-sm">Email Address:</span>
+                        <span class="font-semibold text-slate-800 text-sm truncate max-w-[180px]">{{ ticket.seller_email }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resale Details -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4 flex items-center">
+                    <i class="fas fa-tag mr-2 text-indigo-600"></i>Resale Details
+                </h3>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between py-1">
+                        <span class="text-slate-500 text-sm">Original Price:</span>
+                        <span class="font-semibold text-slate-800 text-sm">PKR {{ "{:,}".format(booking.get('price', 0) if booking else 0) }}</span>
+                    </div>
+                    <div class="flex justify-between py-1">
+                        <span class="text-slate-500 text-sm">Resale Price:</span>
+                        <span class="font-bold text-slate-900 text-sm">PKR {{ "{:,}".format(ticket.asking_price) }}</span>
+                    </div>
+                    <div class="py-1">
+                        <span class="text-slate-500 text-sm block mb-1">Reason for Resale:</span>
+                        <p class="bg-slate-50 rounded-xl p-3 text-slate-700 text-sm italic font-medium">
+                            "{{ ticket.get('resale_reason', 'No reason provided') }}"
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Actions (Only show if status is Pending Verification) -->
+    {% if ticket.status == 'Pending Verification' %}
+    <div class="bg-slate-900 rounded-2xl p-6 mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-800 shadow-xl">
+        <div>
+            <h4 class="text-lg font-bold text-white">Ticket Verification Action</h4>
+            <p class="text-sm text-slate-400">Review the details above before approving or rejecting this ticket.</p>
+        </div>
+        <div class="flex gap-3 w-full sm:w-auto">
+            <a href="{{ url_for('verify_ticket', request_id=ticket.request_id, status='Rejected') }}" 
+               class="flex-1 sm:flex-none text-center px-6 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-lg shadow-rose-600/20 transition-all duration-200 text-sm">
+                Reject Ticket
+            </a>
+            <a href="{{ url_for('verify_ticket', request_id=ticket.request_id, status='Verified / Approved') }}" 
+               class="flex-1 sm:flex-none text-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition-all duration-200 text-sm">
+                Approve & List
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

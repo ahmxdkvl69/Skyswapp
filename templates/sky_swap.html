@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}SkySwap - Ticket Exchange{% endblock %}
+{% block header_title %}SkySwap Ticket Exchange{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8">
+    
+    <!-- Hero / Info Section -->
+    <div class="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-10 text-white shadow-xl relative overflow-hidden">
+        <div class="relative z-10 max-w-2xl">
+            <h2 class="text-3xl font-bold mb-4">Transfer Tickets with Ease.</h2>
+            <p class="text-indigo-100 text-lg mb-6 leading-relaxed">
+                Found a better deal? Plans changed? SkySwap is the secure community exchange to buy and sell verified flight tickets.
+            </p>
+            <div class="flex items-center space-x-8">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-check-circle text-indigo-300"></i>
+                    <span class="text-sm font-medium">Verified Ownership</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-check-circle text-indigo-300"></i>
+                    <span class="text-sm font-medium">Admin Reviewed</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-check-circle text-indigo-300"></i>
+                    <span class="text-sm font-medium">Protected Resale</span>
+                </div>
+            </div>
+        </div>
+        <!-- Decorative Icon -->
+        <i class="fas fa-exchange-alt absolute -right-10 -bottom-10 text-[200px] text-white/10 rotate-12"></i>
+    </div>
+
+    <!-- Listings Section -->
+    <div class="space-y-6">
+        <div class="flex items-center justify-between">
+            <h3 class="text-xl font-bold text-slate-800">Available Resale Tickets ({{ sell_requests|length }})</h3>
+            <div class="flex items-center space-x-3">
+                <select class="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-600 outline-none">
+                    <option>Cheapest First</option>
+                    <option>Most Recent</option>
+                </select>
+            </div>
+        </div>
+
+        {% if sell_requests %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for req in sell_requests %}
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all group">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-indigo-50 p-2 rounded-xl text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                            <i class="fas fa-plane"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-800">{{ req.flight_number }}</p>
+                            <p class="text-xs text-slate-400">Listed by {{ req.seller_email.split('@')[0] }}</p>
+                        </div>
+                    </div>
+                    <div class="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider">
+                        Verified
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between mb-8">
+                    <div class="text-center">
+                        <p class="text-lg font-bold text-slate-800">{{ req.origin }}</p>
+                        <p class="text-xs font-bold text-slate-400">Origin</p>
+                    </div>
+                    <div class="flex-1 px-4">
+                        <div class="flex items-center justify-center">
+                            <div class="h-px bg-slate-100 flex-1"></div>
+                            <i class="fas fa-long-arrow-alt-right mx-2 text-slate-200"></i>
+                            <div class="h-px bg-slate-100 flex-1"></div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-lg font-bold text-slate-800">{{ req.destination }}</p>
+                        <p class="text-xs font-bold text-slate-400">Dest</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-6 border-t border-slate-50">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold uppercase">Asking</p>
+                        <p class="text-2xl font-black text-slate-800">PKR {{ "{:,}".format(req.asking_price) }}</p>
+                    </div>
+                    
+                    <form action="{{ url_for('purchase_ticket') }}" method="POST" onsubmit="return confirm('Submit this resale purchase for admin approval?')">
+                        <input type="hidden" name="request_id" value="{{ req.request_id }}">
+                        <button type="submit" class="bg-primary hover:bg-secondary text-white px-6 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg shadow-primary/20">
+                            Request Purchase
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-20 bg-white rounded-3xl border border-slate-200 opacity-60">
+            <i class="fas fa-handshake-slash text-6xl text-slate-200 mb-6 block"></i>
+            <h3 class="text-xl font-bold text-slate-400">No resale tickets available right now.</h3>
+            <p class="text-slate-400 max-w-xs mx-auto mt-2">Check back later or list your own ticket for sale!</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FlightApp{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#4f46e5',
+                        accent: '#8b5cf6',
+                        dark: '#0f172a',
+                        glass: 'rgba(255, 255, 255, 0.1)',
+                    },
+                    fontFamily: {
+                        outfit: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .sidebar-link { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar-link:hover { transform: translateX(8px); }
+        .active-link { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white !important; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .toast-item { animation: toast-in 0.25s ease-out; }
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    
+    {% if session.get('user') %}
+    <!-- Logged In Layout -->
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-dark text-white flex-shrink-0 flex flex-col shadow-2xl z-50">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-10">
+                    <div class="bg-primary p-2 rounded-xl">
+                        <i class="fas fa-paper-plane text-xl"></i>
+                    </div>
+                    <span class="text-2xl font-bold tracking-tight">SkySwap</span>
+                </div>
+
+                <nav class="space-y-4">
+                    {% if session.get('role') == 'admin' %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="sidebar-link flex items-center space-x-3 p-3 rounded-xl text-gray-400 hover:text-white hover:bg-slate-800 {{ 'active-link' if request.path == url_for('admin_dashboard') }}">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Admin Panel</span>
+                    </a>
+                    <a href="{{ url_for('admin_inventory') }}" class="sidebar-link flex items-center space-x-3 p-3 rounded-xl text-gray-400 hover:text-white hover:bg-slate-800 {{ 'active-link' if request.path == url_for('admin_inventory') }}">
+                        <i class="fas fa-boxes"></i>
+                        <span>Manage Inventory</span>
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('dashboard') }}" class="sidebar-link flex items-center space-x-3 p-3 rounded-xl text-gray-400 hover:text-white hover:bg-slate-800 {{ 'active-link' if request.path == url_for('dashboard') }}">
+                        <i class="fas fa-search"></i>
+                        <span>Search Flights</span>
+                    </a>
+                    <a href="{{ url_for('my_bookings') }}" class="sidebar-link flex items-center space-x-3 p-3 rounded-xl text-gray-400 hover:text-white hover:bg-slate-800 {{ 'active-link' if request.path == url_for('my_bookings') }}">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>My Bookings</span>
+                    </a>
+                    <a href="{{ url_for('sky_swap') }}" class="sidebar-link flex items-center space-x-3 p-3 rounded-xl text-gray-400 hover:text-white hover:bg-slate-800 {{ 'active-link' if request.path == url_for('sky_swap') }}">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>Sky Swap</span>
+                    </a>
+                    <a href="{{ url_for('transactions') }}" class="sidebar-link flex items-center space-x-3 p-3 rounded-xl text-gray-400 hover:text-white hover:bg-slate-800 {{ 'active-link' if request.path == url_for('transactions') }}">
+                        <i class="fas fa-money-check-alt"></i>
+                        <span>Transactions</span>
+                    </a>
+                    <a href="{{ url_for('profile') }}" class="sidebar-link flex items-center space-x-3 p-3 rounded-xl text-gray-400 hover:text-white hover:bg-slate-800 {{ 'active-link' if request.path == url_for('profile') }}">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Profile</span>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+
+            <div class="mt-auto p-6 border-t border-slate-800">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
+                        {{ session['user']['name'][0]|upper }}
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold truncate w-32">{{ session['user']['name'] }}</p>
+                        <p class="text-xs text-slate-400 truncate w-32">{{ session['user']['email'] }}</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="flex items-center space-x-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors w-full">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sign Out</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto relative bg-slate-50">
+            <!-- Top Nav -->
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-40">
+                <h1 class="text-xl font-semibold text-slate-800">
+                    {% block header_title %}{% endblock %}
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <button class="p-2 text-slate-400 hover:text-primary transition-colors">
+                        <i class="far fa-bell"></i>
+                    </button>
+                    <div class="h-8 w-px bg-slate-200"></div>
+                    <span class="text-sm font-medium text-slate-600">{{ session['user']['role']|capitalize }}</span>
+                </div>
+            </header>
+
+            <div class="p-8">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    {% else %}
+    <!-- Guest Layout (Login/Register) -->
+    <div class="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+        <div class="w-full max-w-md">
+            {% block guest_content %}{% endblock %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div id="toastStack" class="fixed top-5 right-5 z-[9999] space-y-3 w-[calc(100%-2.5rem)] max-w-sm">
+        {% for category, message in messages %}
+        {% set is_error = category == 'error' %}
+        <div class="toast-item flex items-start gap-3 rounded-2xl border bg-white px-4 py-3 shadow-2xl shadow-slate-900/10 {{ 'border-red-100' if is_error else 'border-emerald-100' }}">
+            <div class="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl {{ 'bg-red-50 text-red-600' if is_error else 'bg-emerald-50 text-emerald-600' }}">
+                <i class="fas {{ 'fa-triangle-exclamation' if is_error else 'fa-check' }}"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+                <p class="text-sm font-bold {{ 'text-red-700' if is_error else 'text-emerald-700' }}">{{ 'Error' if is_error else 'Success' }}</p>
+                <p class="text-sm text-slate-600">{{ message }}</p>
+            </div>
+            <button type="button" class="toast-close text-slate-300 hover:text-slate-500" aria-label="Close notification">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <script>
+        document.querySelectorAll('.toast-item').forEach((toast) => {
+            const close = toast.querySelector('.toast-close');
+            const dismiss = () => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-8px)';
+                setTimeout(() => toast.remove(), 180);
+            };
+            close.addEventListener('click', dismiss);
+            setTimeout(dismiss, 4500);
+        });
+    </script>
+</body>
+</html>

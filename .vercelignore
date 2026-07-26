@@ -1,0 +1,19 @@
+# Keeping the virtualenv out of the bundle is what keeps the function under
+# Vercel's size limit — Vercel installs from requirements.txt itself.
+venv/
+__pycache__/
+*.pyc
+
+# Secrets and the old file-based database live outside the deployment.
+.env
+serviceAccountKey.json
+local_database.pkl
+external_inventory_db.json
+
+# Local-only helpers
+scratch/
+RUN_APP.vbs
+START.bat
+run_project.bat
+run_project.ps1
+migrate_to_neon.py

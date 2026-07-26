@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions{% endblock %}
+{% block header_title %}Transaction History{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900">Transaction History</h1>
+            <p class="text-slate-500 mt-1">All direct purchases and resale requests are loaded from the database.</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl px-4 py-3 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase">Total</p>
+            <p class="text-2xl font-black text-slate-900">{{ transactions|length }}</p>
+        </div>
+    </div>
+
+    {% if transactions %}
+    <div class="space-y-4">
+        {% for t in transactions %}
+        {% set is_pending = t.status == 'Pending Admin Approval' %}
+        {% set is_rejected = t.status == 'Rejected' %}
+        {% set status_class = 'bg-amber-100 text-amber-700' if is_pending else ('bg-red-100 text-red-700' if is_rejected else 'bg-emerald-100 text-emerald-700') %}
+        {% set steps = t.get('flow_steps') or (['Payment received', 'Ticket issued', 'Booking confirmed'] if t.get('source') == 'direct' else ['Buyer request submitted', 'Admin review', 'Ownership transfer']) %}
+
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+                <div class="space-y-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {{ status_class }}">{{ t.status }}</span>
+                        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider">{{ t.get('source', 'direct') }}</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900">{{ t.type }}</h3>
+                    <p class="text-sm text-slate-500 font-mono">{{ t.transaction_id }}</p>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm lg:min-w-[560px]">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Amount</p>
+                        <p class="font-black text-slate-900">PKR {{ "{:,}".format(t.amount|int) if t.amount else '0' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Flight</p>
+                        <p class="font-semibold text-slate-700">{{ t.get('flight_number') or 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Buyer</p>
+                        <p class="font-semibold text-slate-700 truncate">{{ t.buyer_email }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">Date</p>
+                        <p class="font-semibold text-slate-700">{{ t.created_at_display }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {% for step in steps %}
+                {% set complete_step = (not is_pending and not is_rejected) or loop.index == 1 or (is_rejected and loop.index <= 2) %}
+                <div class="flex items-center gap-3 rounded-xl {{ 'bg-emerald-50 text-emerald-700' if complete_step and not is_rejected else ('bg-red-50 text-red-700' if is_rejected and loop.last else 'bg-slate-50 text-slate-500') }} px-3 py-3">
+                    <div class="h-8 w-8 flex-shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
+                        <i class="fas {{ 'fa-check' if complete_step and not is_rejected else ('fa-times' if is_rejected and loop.last else 'fa-clock') }}"></i>
+                    </div>
+                    <p class="text-sm font-bold">{{ step }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-slate-50 text-slate-300 flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-receipt text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-800">No transactions found</h3>
+        <p class="text-slate-500 mt-2">Completed purchases and resale requests will appear here.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

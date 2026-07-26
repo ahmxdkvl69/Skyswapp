@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Submitted Tickets - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Submitted Tickets</h2>
+        <a href="{{ url_for('admin_reports') }}" class="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700">Download Report (PDF)</a>
+    </div>
+
+    <!-- Search & Filter -->
+    <form method="GET" action="{{ url_for('admin_tickets') }}" class="mb-6 flex gap-4">
+        <input type="text" name="search" placeholder="Search by ID, Flight, Seller..." value="{{ request.args.get('search', '') }}" class="border border-gray-300 rounded p-2 flex-grow focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select name="status" class="border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">All Statuses</option>
+            <option value="Pending Verification" {% if request.args.get('status') == 'Pending Verification' %}selected{% endif %}>Pending Verification</option>
+            <option value="Verified / Approved" {% if request.args.get('status') == 'Verified / Approved' %}selected{% endif %}>Verified / Approved</option>
+            <option value="Rejected" {% if request.args.get('status') == 'Rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+        <button type="submit" class="px-6 py-2 bg-gray-100 border border-gray-300 text-gray-700 rounded hover:bg-gray-200">Filter</button>
+    </form>
+
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flight</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for ticket in tickets %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" title="{{ ticket.request_id }}">{{ ticket.request_id[:8] }}...</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span class="font-semibold">{{ ticket.flight_number }}</span><br>
+                        <span class="text-xs text-gray-500">{{ ticket.airline }}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ ticket.seller_email }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ ticket.departure_date }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            {% if ticket.status == 'Verified / Approved' %}bg-green-100 text-green-800
+                            {% elif ticket.status == 'Rejected' %}bg-red-100 text-red-800
+                            {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                            {{ ticket.status }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="{{ url_for('admin_ticket_detail', request_id=ticket.request_id) }}" class="text-indigo-600 hover:text-indigo-900 font-semibold">View Details</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">No tickets found matching the criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

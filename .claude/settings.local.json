@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(python --version; Write-Output \"exit=$LASTEXITCODE\")",
+      "PowerShell(foreach \\($c in 'node','npm','psql','docker','deno','bun'\\) { $x = Get-Command $c -ErrorAction SilentlyContinue; if \\($x\\) { \"$c -> $\\($x.Source\\)\" } else { \"$c -> not found\" } })",
+      "PowerShell($sp = \"C:\\\\Users\\\\HAZIQ\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-HAZIQ-Desktop-SKYSWAP--2--SKYSWAP-SKYSWAP\\\\a263d84b-21a5-44d7-87eb-ab43777994c7\\\\scratchpad\"; New-Item -ItemType Directory -Force -Path $sp | Out-Null; Set-Location $sp; npm init -y --silent 2>&1 | Out-Null; npm install pg bcryptjs --silent 2>&1 | Select-Object -Last 5; Write-Output \"installed:\"; Get-ChildItem \"$sp\\\\node_modules\" -Directory | Select-Object -ExpandProperty Name)",
+      "PowerShell($p = Get-Command python -ErrorAction SilentlyContinue; if \\($p\\) { \"python -> $\\($p.Source\\)\"; try { python --version } catch { \"stub only\" } } else { \"python not on PATH\" }; Write-Output \"--- venv ---\"; $v = \"C:\\\\Users\\\\HAZIQ\\\\Desktop\\\\SKYSWAP \\(2\\)\\\\SKYSWAP\\\\SKYSWAP\\\\venv\\\\Scripts\\\\python.exe\"; if \\(Test-Path $v\\) { try { & $v --version } catch { \"venv python broken\" } } else { \"no venv python\" })",
+      "PowerShell($w = Get-Command wsl -ErrorAction SilentlyContinue; if \\($w\\) { \"wsl present\"; try { wsl -l -q } catch { \"no distros\" } } else { \"no wsl\" }; Write-Output \"--- winget ---\"; $g = Get-Command winget -ErrorAction SilentlyContinue; if \\($g\\) { \"winget present: $\\($g.Source\\)\" } else { \"no winget\" })",
+      "PowerShell(winget install --id Python.Python.3.12 --source winget --accept-package-agreements --accept-source-agreements --silent --scope user 2>&1)",
+      "PowerShell($py = \"$env:LOCALAPPDATA\\\\Programs\\\\Python\\\\Python312\\\\python.exe\"; if \\(Test-Path $py\\) { & $py --version; Write-Output \"PATH=$py\" } else { Get-ChildItem \"$env:LOCALAPPDATA\\\\Programs\\\\Python\" -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName })",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\HAZIQ\\\\Desktop\\\\SKYSWAP \\(2\\)\\\\SKYSWAP\\\\SKYSWAP\"; if \\(Test-Path venv\\) { Remove-Item -Recurse -Force venv }; & \"$env:LOCALAPPDATA\\\\Programs\\\\Python\\\\Python312\\\\python.exe\" -m venv venv; if \\($?\\) { .\\\\venv\\\\Scripts\\\\python.exe -m pip install --upgrade pip --quiet --disable-pip-version-check; .\\\\venv\\\\Scripts\\\\python.exe -m pip install -r requirements.txt --disable-pip-version-check 2>&1 | Select-Object -Last 8 })",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\HAZIQ\\\\Desktop\\\\SKYSWAP \\(2\\)\\\\SKYSWAP\\\\SKYSWAP\"; $env:PYTHONPATH = \\(Get-Location\\).Path; .\\\\venv\\\\Scripts\\\\python.exe \"C:\\\\Users\\\\HAZIQ\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-HAZIQ-Desktop-SKYSWAP--2--SKYSWAP-SKYSWAP\\\\a263d84b-21a5-44d7-87eb-ab43777994c7\\\\scratchpad\\\\inspect.py\")",
+      "Bash(mv inspect.py show_data.py)",
+      "Bash(rm -rf __pycache__)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\HAZIQ\\\\Desktop\\\\SKYSWAP \\(2\\)\\\\SKYSWAP\\\\SKYSWAP\"; $env:PYTHONPATH = \\(Get-Location\\).Path; .\\\\venv\\\\Scripts\\\\python.exe \"C:\\\\Users\\\\HAZIQ\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-HAZIQ-Desktop-SKYSWAP--2--SKYSWAP-SKYSWAP\\\\a263d84b-21a5-44d7-87eb-ab43777994c7\\\\scratchpad\\\\tz.py\"; Write-Output \"--- windows tz ---\"; \\(Get-TimeZone\\).Id)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\HAZIQ\\\\Desktop\\\\SKYSWAP \\(2\\)\\\\SKYSWAP\\\\SKYSWAP\"; $env:PYTHONPATH = \\(Get-Location\\).Path; .\\\\venv\\\\Scripts\\\\python.exe -c \"from db import query; r=query\\(\\\\\"SELECT request_id, status, verified_by, verification_date, resale_reason FROM sell_requests WHERE status='Pending Verification'\\\\\"\\)[0]; print\\(r['request_id']\\); print\\('verified_by =', repr\\(r['verified_by']\\)\\); print\\('verification_date =', repr\\(r['verification_date']\\)\\); print\\('resale_reason =', repr\\(r['resale_reason']\\)\\)\")",
+      "Bash(./venv/Scripts/python.exe -c ' *)"
+    ]
+  }
+}

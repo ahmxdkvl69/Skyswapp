@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookings - SkySwap{% endblock %}
+{% block header_title %}My Bookings{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8">
+    
+    {% if bookings %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for booking in bookings %}
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden">
+            {% if booking.status == 'On Sale' or booking.status == 'Transfer Pending' %}
+            <div class="absolute top-0 right-0 {{ 'bg-indigo-500' if booking.status == 'Transfer Pending' else 'bg-amber-500' }} text-white px-4 py-1 text-xs font-bold rounded-bl-xl uppercase tracking-widest">
+                {{ 'Pending Approval' if booking.status == 'Transfer Pending' else 'On Sale' }}
+            </div>
+            {% endif %}
+
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-primary/10 p-2 rounded-xl text-primary">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-800">{{ booking.airline }}</p>
+                        <p class="text-xs text-slate-400 font-mono">{{ booking.flight_number }}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-slate-400 uppercase font-bold">Booking ID</p>
+                    <p class="text-sm font-mono text-slate-600">{{ booking.booking_id[:8] }}...</p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between mb-8">
+                <div class="text-center">
+                    <p class="text-2xl font-bold text-slate-800">{{ booking.departure }}</p>
+                    <p class="text-sm font-bold text-slate-500">{{ booking.origin }}</p>
+                </div>
+                <div class="flex-1 px-4 text-center">
+                    <div class="flex items-center justify-center">
+                        <div class="h-px bg-slate-100 flex-1"></div>
+                        <i class="fas fa-plane mx-2 text-slate-200"></i>
+                        <div class="h-px bg-slate-100 flex-1"></div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <p class="text-2xl font-bold text-slate-800">{{ booking.arrival }}</p>
+                    <p class="text-sm font-bold text-slate-500">{{ booking.destination }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-6 border-t border-slate-50">
+                <div>
+                    <p class="text-xs text-slate-400 font-bold uppercase">Status</p>
+                    <p class="text-sm font-bold {{ 'text-green-500' if booking.status == 'Confirmed' or booking.status == 'Confirmed (Transferred)' else ('text-indigo-500' if booking.status == 'Transfer Pending' else 'text-amber-500') }}">
+                        {{ booking.status }}
+                    </p>
+                </div>
+                
+                {% if booking.status == 'Confirmed' or booking.status == 'Confirmed (Transferred)' %}
+                <button onclick="openSellModal('{{ booking.booking_id }}', '{{ booking.price }}')" 
+                        class="bg-dark hover:bg-slate-800 text-white px-6 py-2 rounded-xl text-sm font-bold transition-all shadow-lg">
+                    Sell Ticket
+                </button>
+                {% else %}
+                 <button disabled class="bg-slate-100 text-slate-400 px-6 py-2 rounded-xl text-sm font-bold cursor-not-allowed">
+                    {{ 'Waiting for Admin' if booking.status == 'Transfer Pending' else 'Listed on SkySwap' }}
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20 bg-white rounded-3xl border border-slate-200">
+        <div class="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-6">
+            <i class="fas fa-ticket text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-800 mb-2">No Bookings Yet</h3>
+        <p class="text-slate-500 mb-8">You haven't booked any flights yet.</p>
+        <a href="{{ url_for('dashboard') }}" class="bg-primary text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-primary/30">
+            Book Your First Flight
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Sell Modal -->
+<div id="sellModal" class="fixed inset-0 bg-dark/50 backdrop-blur-sm z-[100] hidden items-center justify-center p-6">
+    <div class="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl scale-95 transition-transform duration-300" id="modalContent">
+        <h3 class="text-2xl font-bold text-slate-800 mb-2">Sell your ticket</h3>
+        <p class="text-slate-500 mb-6 font-medium">List your ticket on SkySwap for other travelers.</p>
+        
+        <form action="{{ url_for('sell_ticket') }}" method="POST" class="space-y-6">
+            <input type="hidden" name="booking_id" id="modal_booking_id">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Your Asking Price (PKR)</label>
+                <input type="number" name="price" id="modal_price" required
+                       class="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-bold text-xl">
+                <p class="mt-2 text-xs text-slate-400">Original price: <span id="original_price_display" class="font-bold"></span></p>
+            </div>
+            
+            <div class="flex gap-4">
+                <button type="button" onclick="closeSellModal()" class="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl transition-all">
+                    Cancel
+                </button>
+                <button type="submit" class="flex-1 py-4 bg-primary hover:bg-secondary text-white font-bold rounded-2xl shadow-lg shadow-primary/30 transition-all">
+                    List Ticket
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openSellModal(bookingId, originalPrice) {
+    document.getElementById('modal_booking_id').value = bookingId;
+    document.getElementById('modal_price').value = originalPrice;
+    document.getElementById('original_price_display').innerText = 'PKR ' + parseInt(originalPrice).toLocaleString();
+    
+    const modal = document.getElementById('sellModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => {
+        document.getElementById('modalContent').classList.remove('scale-95');
+        document.getElementById('modalContent').classList.add('scale-100');
+    }, 10);
+}
+
+function closeSellModal() {
+    const modal = document.getElementById('sellModal');
+    document.getElementById('modalContent').classList.remove('scale-100');
+    document.getElementById('modalContent').classList.add('scale-95');
+    setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+// Close on backdrop click
+document.getElementById('sellModal').addEventListener('click', function(e) {
+    if (e.target === this) closeSellModal();
+});
+</script>
+{% endblock %}
