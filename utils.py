@@ -311,16 +311,54 @@ def hash_password(password):
 
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 
+# Providers that reliably block AbstractAPI's mailbox verification checks,
+# so a real user's address here would otherwise come back "UNKNOWN" and risk
+# being wrongly rejected. Their domains are always genuine, so just trust the
+# domain and skip mailbox-level verification for these.
+MAJOR_EMAIL_PROVIDERS = {
+    "gmail.com", "yahoo.com", "outlook.com", "hotmail.com",
+    "icloud.com", "live.com", "msn.com",
+}
+
+ABSTRACT_EMAIL_API_KEY = os.getenv('ABSTRACT_EMAIL_API_KEY', '').strip()
+
+
 def is_valid_email(email):
     """
-    Validates email format, then checks the domain actually has mail (MX)
-    records -- this is what catches fake-looking domains like '123@123.com'
-    that pass basic regex but can't actually receive mail.
+    Validates email format, then verifies deliverability:
+    - Major providers (Gmail, Yahoo, Outlook, etc.): domain-only MX check,
+      since AbstractAPI can't reliably confirm mailboxes on these anyway.
+    - Everything else: strict mailbox-level verification via AbstractAPI,
+      only accepting a confirmed "DELIVERABLE" result.
     """
     email = (email or "").strip()
     if not EMAIL_REGEX.match(email):
         return False
 
+    domain = email.rsplit('@', 1)[-1].lower()
+
+    if domain in MAJOR_EMAIL_PROVIDERS:
+        return _is_valid_email_domain_only(email)
+
+    if not ABSTRACT_EMAIL_API_KEY:
+        return _is_valid_email_domain_only(email)
+
+    try:
+        response = requests.get(
+            "https://emailvalidation.abstractapi.com/v1/",
+            params={"api_key": ABSTRACT_EMAIL_API_KEY, "email": email},
+            timeout=5,
+        )
+        result = response.json()
+        return result.get("deliverability", "") == "DELIVERABLE"
+
+    except Exception as e:
+        print(f"Email verification API error: {e}")
+        return _is_valid_email_domain_only(email)
+
+
+def _is_valid_email_domain_only(email):
+    """Fallback / major-provider path: just checks the domain has MX records."""
     domain = email.rsplit('@', 1)[-1]
     try:
         import dns.resolver
