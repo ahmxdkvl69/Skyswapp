@@ -685,6 +685,77 @@ def profile():
     )
 
 @app.route('/admin/dashboard')
+@app.route('/admin/profile', methods=['GET', 'POST'])
+def admin_profile():
+    if 'user' not in session or session.get('role') != 'admin':
+        return redirect(url_for('index'))
+
+    email = session['user']['email']
+    user_db = users.find_one(email=email)
+
+    if not user_db:
+        session.clear()
+        flash_error("Please log in again")
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        name = request.form['name'].strip()
+        phone = request.form.get('phone', '').strip()
+        current_password = request.form.get('current_password')
+        new_pass = request.form.get('password')
+
+        if not name:
+            flash_error("Name is required")
+            return redirect(url_for('admin_profile'))
+
+        if phone and not is_valid_phone(phone):
+            flash_error("This isn't a valid number and cannot be registered.")
+            return redirect(url_for('admin_profile'))
+
+        phone = normalize_phone(phone) if phone else phone
+
+        update_data = {
+            'name': name,
+            'phone': phone
+        }
+
+        if new_pass:
+            if not current_password:
+                flash_error("Please enter your current password")
+                return redirect(url_for('admin_profile'))
+
+            if not check_password(user_db['password'], current_password):
+                flash_error("Current password is incorrect")
+                return redirect(url_for('admin_profile'))
+
+            if password_strength(new_pass) == "weak":
+                flash_error("Please choose a stronger password")
+                return redirect(url_for('admin_profile'))
+
+            update_data['password'] = hash_password(new_pass)
+
+        users.update({'email': email}, update_data)
+
+        session['user']['name'] = name
+        session['user']['phone'] = phone
+        session.modified = True
+
+        if new_pass:
+            flash_success("Password changed successfully")
+        else:
+            flash_success("Admin profile updated successfully")
+
+        return redirect(url_for('admin_profile'))
+
+    profile_user = {
+        'uid': str(user_db.get('uid')),
+        'email': user_db.get('email', email),
+        'name': user_db.get('name', session['user'].get('name', '')),
+        'phone': user_db.get('phone', ''),
+        'role': 'admin'
+    }
+
+    return render_template('admin_profile.html', user=profile_user)
 def admin_dashboard():
     if 'user' not in session:
         return redirect(url_for('index'))
