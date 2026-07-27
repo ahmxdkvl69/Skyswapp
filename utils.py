@@ -1,3 +1,4 @@
+import re
 import random
 import string
 import requests
@@ -306,7 +307,47 @@ def hash_password(password):
     """Hash a password for storing."""
     salt = bcrypt.gensalt()
     return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+# --- Validation Helpers ---
 
+EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+
+def is_valid_email(email):
+    """
+    Validates email format, then checks the domain actually has mail (MX)
+    records -- this is what catches fake-looking domains like '123@123.com'
+    that pass basic regex but can't actually receive mail.
+    """
+    email = (email or "").strip()
+    if not EMAIL_REGEX.match(email):
+        return False
+
+    domain = email.rsplit('@', 1)[-1]
+    try:
+        import dns.resolver
+        dns.resolver.resolve(domain, 'MX')
+        return True
+    except Exception:
+        return False
+
+
+PK_PHONE_REGEX = re.compile(r"^(?:\+92|0)3\d{9}$")
+
+def is_valid_phone(phone):
+    """
+    Validates Pakistani mobile numbers. Accepts +923XXXXXXXXX or 03XXXXXXXXX.
+    Rejects numbers like +921234567890, where the digit right after the
+    country code isn't 3 (the only valid PK mobile prefix).
+    """
+    cleaned = (phone or "").strip().replace(" ", "").replace("-", "")
+    return bool(PK_PHONE_REGEX.match(cleaned))
+
+
+def normalize_phone(phone):
+    """Converts 03XXXXXXXXX to +923XXXXXXXXX for consistent DB storage."""
+    cleaned = (phone or "").strip().replace(" ", "").replace("-", "")
+    if cleaned.startswith("0"):
+        return "+92" + cleaned[1:]
+    return cleaned
 
 def check_password(hashed_password, user_password):
     """Check a hashed password."""

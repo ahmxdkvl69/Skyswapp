@@ -10,7 +10,7 @@ from db import execute, query, transaction
 from utils import (
     generate_otp, send_email_emailjs, send_notification_email_emailjs,
     predict_flight_time, hash_password, check_password, get_lowest_price_suggestion,
-    now, to_display_timezone,
+    now, to_display_timezone, is_valid_email, is_valid_phone, normalize_phone,
 )
 from pdf_utils import generate_ticket_pdf, generate_report_pdf
 from external_inventory_client import ExternalInventoryClient
@@ -94,6 +94,13 @@ def register():
         email = request.form['email']
         password = request.form['password']
         name = request.form['name']
+        if not is_valid_email(email):
+            flash_error("This isn't a valid email and cannot be registered.")
+            return redirect(url_for('register'))
+
+        if password_strength(password) == "weak":
+            flash_error("Please choose a stronger password.")
+            return redirect(url_for('register'))
 
         # Check if user already exists
         if users.exists(email=email):
@@ -611,7 +618,13 @@ def profile():
     if request.method == 'POST':
 
         name = request.form['name'].strip()
-        phone = request.form.get('phone', '')
+        phone = request.form.get('phone', '').strip()
+
+        if phone and not is_valid_phone(phone):
+            flash_error("This isn't a valid number and cannot be registered.")
+            return redirect(url_for('profile'))
+
+        phone = normalize_phone(phone) if phone else phone
         current_password = request.form.get('current_password')
         new_pass = request.form.get('password')
 
