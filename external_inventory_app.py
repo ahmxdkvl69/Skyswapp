@@ -53,7 +53,7 @@ HTML_TEMPLATE = """
         <div class="glass-panel rounded-3xl p-6 shadow-2xl flex flex-col md:flex-row md:items-center md:justify-between border-l-4 border-indigo-500">
             <div>
                 <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Global Distribution System (GDS) Simulator</span>
-                <h1 class="text-3xl font-extrabold tracking-tight">Dummy Ticket Inventory</h1>
+                <h1 class="text-3xl font-extrabold tracking-tight">Simple Ticket Inventory System</h1>
                 <p class="text-slate-400 mt-1">Manage flight tickets at the source. Any changes here represent updates in the external airline database.</p>
             </div>
             <div class="mt-4 md:mt-0 flex items-center space-x-3 bg-slate-800 px-4 py-2 rounded-full border border-slate-700">
