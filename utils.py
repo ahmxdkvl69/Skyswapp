@@ -350,7 +350,9 @@ def is_valid_email(email):
             timeout=5,
         )
         result = response.json()
-        return result.get("deliverability", "") == "DELIVERABLE"
+        is_deliverable = result.get("deliverability", "") == "DELIVERABLE"
+        is_catch_all = result.get("is_catchall_email", {}).get("value", False)
+        return is_deliverable and not is_catch_all
 
     except Exception as e:
         print(f"Email verification API error: {e}")
