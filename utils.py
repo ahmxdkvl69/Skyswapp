@@ -370,24 +370,35 @@ def _is_valid_email_domain_only(email):
         return False
 
 
-PK_PHONE_REGEX = re.compile(r"^(?:\+92|0)3\d{9}$")
+import phonenumbers
 
 def is_valid_phone(phone):
     """
-    Validates Pakistani mobile numbers. Accepts +923XXXXXXXXX or 03XXXXXXXXX.
-    Rejects numbers like +921234567890, where the digit right after the
-    country code isn't 3 (the only valid PK mobile prefix).
+    Validates a phone number for ANY country. Expects the number to include
+    a country code (e.g. +923001234567, +14155552671, +447911123456).
     """
-    cleaned = (phone or "").strip().replace(" ", "").replace("-", "")
-    return bool(PK_PHONE_REGEX.match(cleaned))
+    phone = (phone or "").strip()
+    if not phone:
+        return True  # empty is allowed; caller decides if it's required
+
+    try:
+        parsed = phonenumbers.parse(phone, None)  # None = must include country code
+    except phonenumbers.NumberParseException:
+        return False
+
+    return phonenumbers.is_valid_number(parsed)
 
 
 def normalize_phone(phone):
-    """Converts 03XXXXXXXXX to +923XXXXXXXXX for consistent DB storage."""
-    cleaned = (phone or "").strip().replace(" ", "").replace("-", "")
-    if cleaned.startswith("0"):
-        return "+92" + cleaned[1:]
-    return cleaned
+    """Converts any valid international number to clean E.164 format (+countrycodeXXXXXXXXXX)."""
+    phone = (phone or "").strip()
+    if not phone:
+        return phone
+    try:
+        parsed = phonenumbers.parse(phone, None)
+        return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+    except phonenumbers.NumberParseException:
+        return phone
 
 def check_password(hashed_password, user_password):
     """Check a hashed password."""
