@@ -129,15 +129,15 @@ passwordInput.addEventListener("input", function() {
 });
 </script>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/23.7.1/css/intlTelInput.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/23.7.1/js/intlTelInputWithUtils.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.8.2/build/css/intlTelInput.css">
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.8.2/build/js/intlTelInputWithUtils.min.js"></script>
 
 <script>
 const phoneInput = document.querySelector("#phone_display");
 const iti = window.intlTelInput(phoneInput, {
     initialCountry: "pk",
     separateDialCode: true,
-    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/23.7.1/js/utils.js"
+    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@23.8.2/build/js/utils.js"
 });
 
 // Pre-fill from the existing stored number, if any
