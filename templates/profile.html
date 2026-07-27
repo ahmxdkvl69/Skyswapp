@@ -33,9 +33,11 @@
                     <div class="sm:col-span-4">
                         <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
                         <div class="mt-1">
-                            <input type="text" name="phone" id="phone" value="{{ user.get('phone', '') }}" placeholder="+92XXXXXXXXXX"
+                            <input type="tel" id="phone_display" placeholder="Enter phone number"
                                    class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md py-2 px-3 border">
+                            <input type="hidden" name="phone" id="phone">
                         </div>
+                        <p id="phone-error" class="text-xs text-red-500 mt-1 hidden">Please enter a valid phone number.</p>
                     </div>
 
                     <div class="sm:col-span-6">
@@ -126,4 +128,40 @@ passwordInput.addEventListener("input", function() {
     }
 });
 </script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/23.7.1/css/intlTelInput.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/23.7.1/js/intlTelInputWithUtils.min.js"></script>
+
+<script>
+const phoneInput = document.querySelector("#phone_display");
+const iti = window.intlTelInput(phoneInput, {
+    initialCountry: "pk",
+    separateDialCode: true,
+    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/23.7.1/js/utils.js"
+});
+
+// Pre-fill from the existing stored number, if any
+const existingPhone = {{ (user.get('phone', '') or '') | tojson }};
+if (existingPhone) {
+    iti.setNumber(existingPhone);
+}
+
+// On submit, write the full international number (+countrycode...) into
+// the hidden 'phone' field that actually gets sent to Flask.
+document.querySelector("form").addEventListener("submit", function(e) {
+    const phoneErrorEl = document.getElementById("phone-error");
+    const rawValue = phoneInput.value.trim();
+
+    if (rawValue && !iti.isValidNumber()) {
+        e.preventDefault();
+        phoneErrorEl.classList.remove("hidden");
+        phoneInput.focus();
+        return;
+    }
+    phoneErrorEl.classList.add("hidden");
+
+    document.getElementById("phone").value = rawValue ? iti.getNumber() : "";
+});
+</script>
+
 {% endblock %}
