@@ -6,3 +6,4 @@ requests==2.32.3
 bcrypt==4.2.1
 fpdf2==2.8.2
 tzdata==2024.2
+dnspython
