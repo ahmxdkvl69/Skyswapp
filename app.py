@@ -372,7 +372,7 @@ def confirm_payment():
 
         ticket = fetched_tickets.find_one(ticket_id=ticket_id)
 
-        bookings.insert({
+        booking_data = {
             "booking_id": ticket_id,
             "user_uid": session['user']['uid'],
             "user_email": session['user']['email'],
@@ -388,7 +388,16 @@ def confirm_payment():
             "price": flight_data['price'],
             "status": "Confirmed",
             "created_at": now()
-        })
+        }
+
+        # A ticket_id can end up "Published" again after already being
+        # booked once (e.g. an admin manually re-publishing it from the
+        # inventory panel), so treat this as an upsert rather than
+        # assuming every booking_id is brand new.
+        if bookings.exists(booking_id=ticket_id):
+            bookings.update({"booking_id": ticket_id}, booking_data)
+        else:
+            bookings.insert(booking_data)
 
         txn_table.insert({
             "transaction_id": str(uuid.uuid4()),
