@@ -46,7 +46,7 @@
     <!-- Logged In Layout -->
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
-        <aside class="w-64 bg-dark text-white flex-shrink-0 flex flex-col shadow-2xl z-50">
+        <aside id="sidebar" class="w-64 bg-dark text-white flex-shrink-0 flex flex-col shadow-2xl z-50 fixed inset-y-0 left-0 -translate-x-full transition-transform duration-200 ease-in-out md:translate-x-0 md:static"></aside>
             <div class="p-6">
                 <div class="flex items-center space-x-3 mb-10">
                     <div class="bg-primary p-2 rounded-xl">
@@ -107,13 +107,21 @@
             </div>
         </aside>
 
+        <!-- Mobile overlay: click to close sidebar -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/40 z-40 hidden md:hidden"></div>
+
         <!-- Main Content Area -->
         <main class="flex-1 overflow-y-auto relative bg-slate-50">
             <!-- Top Nav -->
-            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-40">
-                <h1 class="text-xl font-semibold text-slate-800">
-                    {% block header_title %}{% endblock %}
-                </h1>
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40">
+                <div class="flex items-center gap-3">
+                    <button id="sidebar-toggle" class="md:hidden p-2 text-slate-500 hover:text-primary">
+                        <i class="fas fa-bars text-lg"></i>
+                    </button>
+                    <h1 class="text-xl font-semibold text-slate-800">
+                        {% block header_title %}{% endblock %}
+                    </h1>
+                </div>
                 <div class="flex items-center space-x-4">
                     <button class="p-2 text-slate-400 hover:text-primary transition-colors">
                         <i class="far fa-bell"></i>
@@ -159,6 +167,27 @@
     </div>
     {% endif %}
     {% endwith %}
+
+    <script>
+        const sidebarEl = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+        function openSidebar() {
+            sidebarEl.classList.remove('-translate-x-full');
+            sidebarOverlay.classList.remove('hidden');
+        }
+        function closeSidebar() {
+            sidebarEl.classList.add('-translate-x-full');
+            sidebarOverlay.classList.add('hidden');
+        }
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', openSidebar);
+        }
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', closeSidebar);
+        }
+    </script>
 
     <script>
         document.querySelectorAll('.toast-item').forEach((toast) => {
